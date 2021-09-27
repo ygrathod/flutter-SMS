@@ -38,12 +38,13 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   String statusNew = "";
   List<String> MoNuber = [];
+  List<String?> phones = [];
+  List<String?> messageNumber = [];
   // final Permission _permission;
   // PermissionStatus _permissionStatus = PermissionStatus.denied;
   @override
   void initState() {
     requestPermission();
-
     super.initState();
   }
 
@@ -81,9 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          sendMessage();
+          fetchContacts();
+
           // telephony.sendSms(
-          //     to: "8758022838;9898649864;7573869262",
+          //     to: "+918758022838",
           //     message: "May the force be with you!",
           //     statusListener: listener);
         },
@@ -94,8 +96,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> requestPermission() async {
-
-
     Map<Permission, PermissionStatus> statuses = await [
       Permission.sms,
       Permission.contacts,
@@ -106,23 +106,72 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-Future<void> sendMessage() async {
+Future<void> fetchContacts() async {
   Iterable<Contact> contacts = await ContactsService.getContacts(withThumbnails: false);
   List<String?> names = [];
-  List<String?> phones = [];
+
+print(contacts.length);
   contacts.forEach((contact) {
     contact.phones!.toSet().forEach((phone) {
       names.add(contact.displayName ?? contact.givenName);
-      phones.add(phone.value);
-      debugPrint(phone.toString());
+
+      phones.add(phone.value.toString().replaceAll(" ", ""));
+      print(phone.value.toString().replaceAll(" ", ""));
+
     });
   });
 
+
+  // phones.toSet().toList();
+  print(phones.length);
+  messageNumber = importNumber(phones);
   // debugPrint(phones.toString());
+}
 
+List<String?> importNumber(List<String?> phoneNumber) {
 
+    List<String?> realNumber = [];
+
+    phoneNumber.forEach((element) {
+      if(element.toString().length == 10) {
+        realNumber.add(element);
+        // print(element);
+      } else if(element.toString().length == 13) {
+        realNumber.add(element.toString().substring(3));
+        // print(element.toString().substring(3));
+      }
+    });
+
+    return (realNumber.toSet().toList());
+    // return realNumber;
+  }
+
+Future<void> sendMessage(String number,String message) async {
+  final Telephony telephony = Telephony.instance;
+
+  if(number.length == 10){
+    telephony.sendSms(
+        to: number,
+        message: message,
+        );
+  }
 
 }
+
+Future<void> sendMessageToMultiple(List<String?> numbers) async {
+
+    if(numbers.length < 100) {
+      numbers.forEach((element) {
+        sendMessage(element!, "Hey this is just test Message. please don't irritate...");
+      });
+    }
+    else if(numbers.length >= 100) {
+      
+    }
+
+
+
+  }
 
 
 }
