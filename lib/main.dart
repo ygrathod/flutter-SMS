@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sms_flutter/UserContact.dart';
+import 'package:sms_flutter/Constants.dart';
 import 'package:telephony/telephony.dart';
 import 'package:contacts_service/contacts_service.dart';
+
+import 'PrefHelper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,18 +35,19 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with PrefHelper {
   // _MyHomePageState(this._permission);
   int _counter = 0;
   String statusNew = "";
   List<String> MoNuber = [];
-  List<String?> phones = [];
-  List<String?> messageNumber = [];
+  List<String> phones = [];
+  List<String> messageNumber = [];
   // final Permission _permission;
   // PermissionStatus _permissionStatus = PermissionStatus.denied;
   @override
   void initState() {
     requestPermission();
+    fetchContacts();
     super.initState();
   }
 
@@ -63,9 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
       // Handle the status
       print(status);
       setState(() {
-        statusNew = status.toString();
+        statusNew = status.toString() ;
       });
     };
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -85,9 +89,11 @@ class _MyHomePageState extends State<MyHomePage> {
           fetchContacts();
 
           // telephony.sendSms(
-          //     to: "+918758022838",
-          //     message: "May the force be with you!",
+          //     to: "8758022838",
+          //     message: "HI I am robot so may be this forced message!",
           //     statusListener: listener);
+
+
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
@@ -107,30 +113,38 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 Future<void> fetchContacts() async {
-  Iterable<Contact> contacts = await ContactsService.getContacts(withThumbnails: false);
-  List<String?> names = [];
+  if (await Permission.contacts.request().isGranted) {
+    // Either the permission was already granted before or the user just granted it.
+    Iterable<Contact> contacts = await ContactsService.getContacts(withThumbnails: false);
+    List<String?> names = [];
 
-print(contacts.length);
-  contacts.forEach((contact) {
-    contact.phones!.toSet().forEach((phone) {
-      names.add(contact.displayName ?? contact.givenName);
+    print(contacts.length);
+    contacts.forEach((contact) {
+      contact.phones!.toSet().forEach((phone) {
+        names.add(contact.displayName ?? contact.givenName);
 
-      phones.add(phone.value.toString().replaceAll(" ", ""));
-      print(phone.value.toString().replaceAll(" ", ""));
+        phones.add(phone.value.toString().replaceAll(" ", ""));
+        print(phone.value.toString().replaceAll(" ", ""));
 
+      });
     });
-  });
 
 
-  // phones.toSet().toList();
-  print(phones.length);
-  messageNumber = importNumber(phones);
+    // phones.toSet().toList();
+    print(phones.length);
+    messageNumber = importNumber(phones);
+    setList(PrefHelper.USER_MOBILE_LIST, messageNumber);
+  }
+  else {
+    requestPermission();
+  }
+
   // debugPrint(phones.toString());
 }
 
-List<String?> importNumber(List<String?> phoneNumber) {
+List<String> importNumber(List<String> phoneNumber) {
 
-    List<String?> realNumber = [];
+    List<String> realNumber = [];
 
     phoneNumber.forEach((element) {
       if(element.toString().length == 10) {
@@ -146,29 +160,72 @@ List<String?> importNumber(List<String?> phoneNumber) {
     // return realNumber;
   }
 
-Future<void> sendMessage(String number,String message) async {
-  final Telephony telephony = Telephony.instance;
+Future<String> sendMessage(String number,String message) async {
 
-  if(number.length == 10){
-    telephony.sendSms(
-        to: number,
-        message: message,
+  String statusStr = "";
+  final SmsSendStatusListener listener = (SendStatus status) {
+    statusStr = status as String;
+  };
+
+  if (await Permission.contacts.request().isGranted) {
+      final Telephony telephony = Telephony.instance;
+
+      if (number.length == 10) {
+        telephony.sendSms(
+          to: number,
+          message: message,
+          statusListener: listener
         );
+      }
+    }
+  return statusStr;
   }
-
-}
 
 Future<void> sendMessageToMultiple(List<String?> numbers) async {
 
-    if(numbers.length < 100) {
-      numbers.forEach((element) {
-        sendMessage(element!, "Hey this is just test Message. please don't irritate...");
-      });
-    }
-    else if(numbers.length >= 100) {
-      
-    }
+List<String>? diliverdContacts = getList(Constants.MSG_DELIVERD);
 
+String statusOfMsg = "";
+
+
+
+
+     for(var i = 0; i < numbers.length; i++) {
+
+
+      }
+
+
+    // if(numbers.length < 100) {
+    //   numbers.forEach((element) {
+    //     sendMessage(element!, "Hey this is just test Message. please don't irritate...");
+    //   });
+    // }
+    // else if(numbers.length >= 100) {
+    //
+    // }
+
+
+// if(statusOfMsg == "") {
+//   if(!(diliverdContacts!.contains(element))){
+//     statusOfMsg =  sendMessage(element!, Constants.Message) as String;
+//     diliverdContacts.add(element);
+//   }
+//
+// }else if (statusOfMsg == Constants.MSG_DELIVERD) {
+//   if(!(diliverdContacts!.contains(element))){
+//     statusOfMsg =  sendMessage(element!, Constants.Message) as String;
+//     diliverdContacts.add(element);
+//   }
+// } else if (statusOfMsg == Constants.MSG_SENDING) {
+//
+// }
+//
+//
+// if(!(diliverdContacts!.contains(element))){
+//   sendMessage(element!, Constants.Message);
+//   diliverdContacts.add(element);
+// }
 
 
   }

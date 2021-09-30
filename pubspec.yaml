@@ -37,6 +37,7 @@ dependencies:
   telephony: ^0.1.4
   permission_handler: ^8.1.6
   contacts_service: ^0.6.3
+  shared_preferences: ^2.0.8
 
 
 dev_dependencies:
