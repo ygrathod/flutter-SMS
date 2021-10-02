@@ -19,7 +19,7 @@ class PrefHelper {
     if (result == null && defaultValue != null) {
       return defaultValue;
     } else
-      return result;
+       return result;
   }
 
   Future<bool> clear() async {

