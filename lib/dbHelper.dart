@@ -28,7 +28,12 @@ class DBHelper {
     // When creating the db, create the table
     await db.execute(
         "CREATE TABLE NumberList(id INTEGER PRIMARY KEY AUTOINCREMENT,mobileno TEXT UNIQUE, status TEXT)");
-    print("Created tables");
+    print("Created tables______________________numberlist___________________________________________________________________________________");
+
+    await db.execute(
+        "CREATE TABLE ValueStored(id INTEGER PRIMARY KEY AUTOINCREMENT,key TEXT UNIQUE, value TEXT)");
+    print("Created tables______________________valueStored___________________________________________________________________________________");
+
 
   }
 
@@ -40,7 +45,25 @@ class DBHelper {
           'INSERT OR IGNORE INTO NumberList(mobileno, status ) VALUES("${user.userMobile}", "${user.userMsgStatus}") ');
     });
   }
-  
+
+  void setValue(String key, String value) async {
+    var dbClient = await db;
+    // print("_________${user.userMobile}___________________________");
+    await dbClient.transaction((txn) async {
+      return await txn.rawInsert(
+          'INSERT INTO ValueStored(key, value ) VALUES("${key}", "${value}") ON CONFLICT(key) DO UPDATE SET value = "${value}" ');
+    });
+  }
+
+  void updateValue(String key, String value) async {
+    var dbClient = await db;
+    // print("_________${user.userMobile}___________________________");
+    await dbClient.transaction((txn) async {
+      return await txn.rawInsert(
+          'UPDATE ValueStored SET value = "${value}" WHERE key = "${key}"');
+    });
+  }
+
   void updateNumber(User user) async {
     var dbClient = await db;
     
@@ -51,7 +74,7 @@ class DBHelper {
 
   Future<List<String>> selectNumber() async {
     var dbClient = await db;
-    var listNumber = await dbClient.rawQuery('SELECT mobileno FROM NumberList WHERE status= "${Constants.MSG_SENDING}" or status= "${Constants.MSG_INTIAL}" ');
+    var listNumber = await dbClient.rawQuery('SELECT mobileno FROM NumberList WHERE status= "${Constants.MSG_SENDING}" or status= "${Constants.MSG_INTIAL}" LIMIT 50 ');
 // print(listNumber);
 
     List<String> mobNum = [];
@@ -77,6 +100,19 @@ class DBHelper {
 
   }
 
+
+  Future<String> getvalue(String key) async {
+    var dbClient = await db;
+    var NumberStatus = await dbClient.rawQuery('SELECT value FROM ValueStored WHERE key= "$key" ');
+// print(listNumber);
+
+
+
+    // print("${NumberStatus[0]["status"]} ______________________________________________________________________________________________________");
+    return NumberStatus[0]["value"].toString();
+
+
+  }
   
   
   // Future<List<User>> getUserMobileList() async {
