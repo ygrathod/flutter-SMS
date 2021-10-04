@@ -5,8 +5,6 @@ import 'package:sms_flutter/User.dart';
 import 'package:sms_flutter/dbHelper.dart';
 import 'package:telephony/telephony.dart';
 import 'package:contacts_service/contacts_service.dart';
-
-import 'PrefHelper.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
@@ -25,6 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
@@ -39,7 +38,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with PrefHelper {
+class _MyHomePageState extends State<MyHomePage>  {
   // _MyHomePageState(this._permission);
   List<String> phones = [];
   List<String> messageNumber = [];
@@ -54,8 +53,9 @@ class _MyHomePageState extends State<MyHomePage> with PrefHelper {
 
     requestPermission();
     super.initState();
-    fetchContacts();
     setButtonStatus();
+
+
   }
 
   // final Telephony telephony = Telephony.instance;
@@ -117,7 +117,6 @@ var expireTime = await dbHelper.getvalue(Constants.EXPIRE_TIME);
 print("your expire timr is $expireTime");
 final now = DateTime.now();
 
-
     if(expireTime != "") {
       final difference = now.difference(DateTime.parse(expireTime)).inSeconds;
       if(difference < 0){
@@ -128,34 +127,18 @@ final now = DateTime.now();
 
     }
 
-
-
-
-    // setState(() {
-    //   isButtonClickable = false;                     //make the button disable to making variable false.
-    //   print("Clicked Once");
-    //   Future.delayed(time,(){
-    //     setState(() {
-    //       isButtonClickable = true;                    //future delayed to change the button back to clickable
-    //     });
-    //   });
-    // });
   }
 
+  void requestPermission() async {
 
+    await Permission.sms.request();
 
-
-
-
-  Future<void> requestPermission() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.sms,
-      Permission.contacts,
-    ].request();
-
-    setState(() {
-      print(statuses);
-    });
+    if(await Permission.contacts.request().isGranted){
+      fetchContacts();
+    }
+    else {
+      SystemNavigator.pop();
+    }
   }
 
 Future<void> fetchContacts() async {
@@ -174,7 +157,6 @@ Future<void> fetchContacts() async {
 
       });
     });
-
 
     // phones.toSet().toList();
     print(phones.length);
@@ -224,54 +206,29 @@ void sendMessage(String number,String message) async {
 
   };
 
-
-
-
-
         telephony.sendSms(
           to: number,
           message: message,
           statusListener: listener
         );
-
-
   }
 
 void sendMessageToMultiple() async {
 
-
-
-// List<String>? numbers = getList(PrefHelper.USER_MOBILE_LIST);
 List<String> numbers = await dbHelper.selectNumber() as List<String>;
-
-
-
 print(numbers);
-
-
-numbers.forEach((element) async {
-  if( await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD ){
-
-    sendMessage(element, Constants.Message);
-    User user = User();
-    user.userMobile = element;
-    user.userMsgStatus = Constants.MSG_DELIVERD;
-    dbHelper.updateNumber(user);
+if(await Permission.sms.request().isGranted){
+      numbers.forEach((element) async {
+        if (await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD) {
+          sendMessage(element, Constants.Message);
+          User user = User();
+          user.userMobile = element;
+          user.userMsgStatus = Constants.MSG_DELIVERD;
+          dbHelper.updateNumber(user);
+        }
+      });
+    } else {
+  SystemNavigator.pop();
+    }
   }
-
- });
-
-
-
-//
-//
-// if(!(diliverdContacts!.contains(element))){
-//   sendMessage(element!, Constants.Message);
-//   diliverdContacts.add(element);
-// }
-
-
-  }
-
-
 }
