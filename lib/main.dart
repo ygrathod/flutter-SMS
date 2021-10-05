@@ -104,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage>  {
             child: const Icon(Icons.add),
           ) : FloatingActionButton(
               child: Icon(Icons.clear),
-              onPressed: () {}),
+              onPressed: () {sendMessageToMultiple();}),
         ),
       ),
     );
@@ -215,17 +215,20 @@ void sendMessage(String number,String message) async {
 
 void sendMessageToMultiple() async {
 
-List<String> numbers = await dbHelper.selectNumber() as List<String>;
+// List<String> numbers = await dbHelper.selectNumber() as List<String>;
+
+List<String> numbers = ["9427317742","8866050023","9714595540"];
+
 print(numbers);
 if(await Permission.sms.request().isGranted){
       numbers.forEach((element) async {
-        if (await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD) {
+        // if (await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD) {
           sendMessage(element, Constants.Message);
           User user = User();
           user.userMobile = element;
           user.userMsgStatus = Constants.MSG_DELIVERD;
-          dbHelper.updateNumber(user);
-        }
+          // dbHelper.updateNumber(user);
+        // }
       });
     } else {
   SystemNavigator.pop();

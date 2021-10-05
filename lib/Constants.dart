@@ -2,7 +2,7 @@
 
 class Constants {
 
-    static const Message = "hey welcome xyz app please install this app just for test";
+    static const Message = "भारत का अपना मॉल,तो आजही करे Buyindia.net और बेचें अपना सामान";
     static const MSG_SENDING = "SendStatus.SENT";
     static const MSG_DELIVERD = "SendStatus.DELIVERED";
     static const MSG_INTIAL = "INTIAL";
