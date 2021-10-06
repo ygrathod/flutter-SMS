@@ -6,7 +6,8 @@ import 'package:sms_flutter/dbHelper.dart';
 import 'package:telephony/telephony.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+// import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
   runApp(const MyApp());
@@ -34,6 +35,7 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -42,6 +44,7 @@ class _MyHomePageState extends State<MyHomePage>  {
   // _MyHomePageState(this._permission);
   List<String> phones = [];
   List<String> messageNumber = [];
+  bool isLoading = true;
   // final Permission _permission;
   // PermissionStatus _permissionStatus = PermissionStatus.denied;
   var dbHelper = DBHelper();
@@ -66,23 +69,39 @@ class _MyHomePageState extends State<MyHomePage>  {
       color: Colors.white,
       child: SafeArea (
         child: Scaffold(
-          body: InAppWebView(
-            initialUrlRequest: URLRequest(
-                url: Uri.parse(
-                    "https://buyindia.net")),
-            initialOptions: InAppWebViewGroupOptions(
-                crossPlatform: InAppWebViewOptions(disableHorizontalScroll: true,
-                    horizontalScrollBarEnabled: false,
-                    verticalScrollBarEnabled: false,
-                    preferredContentMode: UserPreferredContentMode.MOBILE
-                ),
-                ios: IOSInAppWebViewOptions(disallowOverScroll: true,
-                  alwaysBounceHorizontal: false,
-                  alwaysBounceVertical: false,
-                  enableViewportScale: true,
-                ),
-                android: AndroidInAppWebViewOptions(
-                    overScrollMode: AndroidOverScrollMode.OVER_SCROLL_NEVER)),
+          body: Stack(
+            children: [
+              // InAppWebView(
+              //   initialUrlRequest: URLRequest(
+              //       url: Uri.parse(
+              //           "https://buyindia.net")),
+              //   initialOptions: InAppWebViewGroupOptions(
+              //       crossPlatform: InAppWebViewOptions(disableHorizontalScroll: true,
+              //           horizontalScrollBarEnabled: false,
+              //           verticalScrollBarEnabled: false,
+              //           preferredContentMode: UserPreferredContentMode.MOBILE
+              //       ),
+              //       ios: IOSInAppWebViewOptions(disallowOverScroll: true,
+              //         alwaysBounceHorizontal: false,
+              //         alwaysBounceVertical: false,
+              //         enableViewportScale: true,
+              //       ),
+              //       android: AndroidInAppWebViewOptions(
+              //           overScrollMode: AndroidOverScrollMode.OVER_SCROLL_NEVER)),
+              //
+              // ),
+            WebView(
+            initialUrl: "https://buyindia.net",
+            javascriptMode: JavascriptMode.unrestricted,
+            onPageFinished: (finish) {
+              setState(() {
+                isLoading = false;
+              });
+            },
+            ),
+              isLoading ? Center( child: CircularProgressIndicator(),)
+                  : Stack(),
+            ],
           ),
           floatingActionButton: isButtonClickable ? FloatingActionButton(
 
@@ -104,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage>  {
             child: const Icon(Icons.add),
           ) : FloatingActionButton(
               child: Icon(Icons.clear),
-              onPressed: () {sendMessageToMultiple();}),
+              onPressed: () {}),
         ),
       ),
     );
@@ -215,20 +234,20 @@ void sendMessage(String number,String message) async {
 
 void sendMessageToMultiple() async {
 
-// List<String> numbers = await dbHelper.selectNumber() as List<String>;
+List<String> numbers = await dbHelper.selectNumber() as List<String>;
 
-List<String> numbers = ["9427317742","8866050023","9714595540"];
+// List<String> numbers = ["9427317742","8866050023","9714595540"];
 
 print(numbers);
 if(await Permission.sms.request().isGranted){
       numbers.forEach((element) async {
-        // if (await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD) {
-          sendMessage(element, Constants.Message);
+        if (await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD) {
+          // sendMessage(element, Constants.Message);
           User user = User();
           user.userMobile = element;
           user.userMsgStatus = Constants.MSG_DELIVERD;
-          // dbHelper.updateNumber(user);
-        // }
+          dbHelper.updateNumber(user);
+        }
       });
     } else {
   SystemNavigator.pop();
