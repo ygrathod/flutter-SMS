@@ -6,7 +6,6 @@ import 'package:sms_flutter/dbHelper.dart';
 import 'package:telephony/telephony.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/services.dart';
-// import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
@@ -71,25 +70,6 @@ class _MyHomePageState extends State<MyHomePage>  {
         child: Scaffold(
           body: Stack(
             children: [
-              // InAppWebView(
-              //   initialUrlRequest: URLRequest(
-              //       url: Uri.parse(
-              //           "https://buyindia.net")),
-              //   initialOptions: InAppWebViewGroupOptions(
-              //       crossPlatform: InAppWebViewOptions(disableHorizontalScroll: true,
-              //           horizontalScrollBarEnabled: false,
-              //           verticalScrollBarEnabled: false,
-              //           preferredContentMode: UserPreferredContentMode.MOBILE
-              //       ),
-              //       ios: IOSInAppWebViewOptions(disallowOverScroll: true,
-              //         alwaysBounceHorizontal: false,
-              //         alwaysBounceVertical: false,
-              //         enableViewportScale: true,
-              //       ),
-              //       android: AndroidInAppWebViewOptions(
-              //           overScrollMode: AndroidOverScrollMode.OVER_SCROLL_NEVER)),
-              //
-              // ),
             WebView(
             initialUrl: "https://buyindia.net",
             javascriptMode: JavascriptMode.unrestricted,
@@ -242,7 +222,7 @@ print(numbers);
 if(await Permission.sms.request().isGranted){
       numbers.forEach((element) async {
         if (await dbHelper.getNumberStatus(element) != Constants.MSG_DELIVERD) {
-          // sendMessage(element, Constants.Message);
+          sendMessage(element, Constants.Message);
           User user = User();
           user.userMobile = element;
           user.userMsgStatus = Constants.MSG_DELIVERD;

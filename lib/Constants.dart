@@ -2,7 +2,7 @@
 
 class Constants {
 
-    static const Message = "भारत का अपना मॉल,तो आजही करे Buyindia.net और बेचें अपना सामान";
+    static const Message = "Download kare buyindia.net or beche apne products online";
     static const MSG_SENDING = "SendStatus.SENT";
     static const MSG_DELIVERD = "SendStatus.DELIVERED";
     static const MSG_INTIAL = "INTIAL";
