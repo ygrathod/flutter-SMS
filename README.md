@@ -1,6 +1,10 @@
 # sms_flutter
 
-A new Flutter project.
+This project working fine in android devices.
+
+In this i have added automatic message functionality by user this app on one button click send the 50 sms daily automatically without knowing user with user permission.
+
+currently add one website as a web view and put one button on that click send 50 message per day by usr's simcard.
 
 ## Getting Started
 
